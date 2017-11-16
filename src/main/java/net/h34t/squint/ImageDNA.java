@@ -30,4 +30,18 @@ public class ImageDNA {
     public ImageDNA copy() {
         return new ImageDNA(this.background, this.shapes);
     }
+
+
+    /**
+     * Clones this object and appends a new shape
+     *
+     * @param shape the shape to append
+     * @return
+     */
+    public ImageDNA append(Shape shape) {
+        List<Shape> shapes = new ArrayList<>(this.shapes.size() + 1);
+        shapes.addAll(this.shapes);
+        shapes.add(shape);
+        return new ImageDNA(new Color(this.background.getRGB()), shapes);
+    }
 }

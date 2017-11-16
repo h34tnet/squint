@@ -2,7 +2,8 @@ package net.h34t.squint;
 
 import net.h34t.squint.shape.Shape;
 
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 public class Painter {
@@ -18,6 +19,7 @@ public class Painter {
 
         this.image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         this.g2d = (Graphics2D) image.getGraphics();
+        this.g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     }
 
     public void paint(ImageDNA dna) {

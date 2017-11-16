@@ -1,18 +1,30 @@
 package net.h34t.squint;
 
 import net.h34t.squint.shape.Oval;
+import net.h34t.squint.shape.Shape;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Squint {
+
+    public static final int THREADS = 4;
+
+    public static final int SHAPES = 512;
+    public static final int OPT_CANDIDATE = 128;
+    public static final int OPT_HC_CUTOFF = 16;
+
 
     public static void main(String... args) throws IOException, ExecutionException, InterruptedException {
 
@@ -25,92 +37,143 @@ public class Squint {
         File output = File.createTempFile("output-", ".png", new File("output"));
         System.out.println("storing result to " + output.getName());
 
-        ExecutorService executorService = Executors.newFixedThreadPool(16, new PainterThreadFactory(source));
+        ExecutorService executorService = Executors.newFixedThreadPool(THREADS, new PainterThreadFactory(source));
 
         Painter painter = new Painter(source.getWidth(), source.getHeight());
         Rater tester = new Rater(source);
 
-        RatedDNA best = new RatedDNA(null, Long.MAX_VALUE);
+        RatedDNA bestDna = new RatedDNA(null, Long.MAX_VALUE);
 
-        for (int i = 0; i < 512; i++) {
+        for (int i = 0; i < OPT_CANDIDATE; i++) {
             ImageDNA idna = new ImageDNA(getRandomColor(r));
             painter.paint(idna);
             long score = tester.getScore(painter.getImage());
-            if (score < best.score)
-                best = new RatedDNA(idna, score);
+            if (score < bestDna.score)
+                bestDna = new RatedDNA(idna, score);
         }
 
-        for (int j = 0; j < 512; j++) {
+        BufferedImage bestImage;
+
+        for (int j = 0; j < SHAPES; j++) {
             System.out.println("round " + j);
 
+            painter.paint(bestDna.dna);
+            bestImage = painter.getImage();
+
             List<RatingTask> candidates = new ArrayList<>();
+            RatedShape bestCandidate = null;
 
-            for (int i = 0; i < 256; i++) {
-                ImageDNA idna = best.dna.copy();
-                idna.getShapes().add(new Oval(
-                        r.nextInt(w),
-                        r.nextInt(h),
-                        r.nextInt(w - 1) + 1,
-                        r.nextInt(h - 1) + 1,
-                        getRandomAlphaColor(r)));
+            do {
+                for (int i = 0; i < OPT_CANDIDATE; i++) {
+                    Shape candidate = new Oval(
+                            r.nextInt(w),
+                            r.nextInt(h),
+                            r.nextInt(w - 1) + 1,
+                            r.nextInt(h - 1) + 1,
+                            getRandomAlphaColor(r));
 
-                candidates.add(new RatingTask(idna));
-            }
+                    candidates.add(new RatingTask(bestImage, candidate));
+                }
 
-            List<Future<RatedDNA>> results = null;
-            try {
-                results = executorService.invokeAll(candidates);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+                List<Future<RatedShape>> results = null;
+                try {
+                    results = executorService.invokeAll(candidates);
+                } catch (InterruptedException ignored) {
+                }
 
-            for (Future<RatedDNA> res : results) {
-                RatedDNA cand = res.get();
+                RatedShape runnerUp = getBestCandidate(results);
+                if (runnerUp.score < bestDna.score)
+                    bestCandidate = runnerUp;
 
-                if (cand.score < best.score) {
-                    best = cand;
+            } while (bestCandidate == null);
+
+            System.out.printf("%,16d - best candidate after initial rounds%n", bestCandidate.score);
+
+            int failedOptRounds = 0;
+            int optRounds = 0;
+
+            while (failedOptRounds < OPT_HC_CUTOFF) {
+                try {
+                    optRounds += 1;
+                    candidates.clear();
+
+                    for (int cs = 0; cs < 4; cs++)
+                        candidates.add(new RatingTask(bestImage, bestCandidate.shape.mutate(r)));
+
+                    RatedShape runnerUp = getBestCandidate(executorService.invokeAll(candidates));
+
+                    if (runnerUp.score < bestCandidate.score) {
+                        failedOptRounds = 0;
+                        bestCandidate = runnerUp;
+
+
+                    } else {
+                        failedOptRounds++;
+                    }
+
+                } catch (InterruptedException ignored) {
                 }
             }
 
-            System.out.println("best candidate: " + best.score);
+            System.out.printf("%,16d - best candidate after %d opt rounds%n", bestCandidate.score, optRounds);
 
-            saveLeader(painter, best.dna, output);
+
+            long scoreImprovement = bestCandidate.score - bestDna.score;
+            System.out.printf("%,16d - improvement%n%n", scoreImprovement);
+
+
+            bestDna = new RatedDNA(bestDna.dna.append(bestCandidate.shape), bestCandidate.score);
+
+            saveLeader(painter, bestDna.dna, output);
         }
 
         executorService.shutdown();
 
     }
 
-    public static Color getRandomColor(Random r) {
+    private static Color getRandomColor(Random r) {
         return new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255));
     }
 
-    public static Color getRandomAlphaColor(Random r) {
+    private static Color getRandomAlphaColor(Random r) {
         return new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255), r.nextInt(255));
     }
 
-    public static void saveLeader(Painter painter, ImageDNA dna, File output) throws IOException {
+    private static void saveLeader(Painter painter, ImageDNA dna, File output) throws IOException {
         painter.paint(dna);
         ImageIO.write(painter.getImage(), "png", output);
 
     }
 
-    public static class RatingTask implements Callable<RatedDNA> {
+    private static RatedShape getBestCandidate(List<Future<RatedShape>> results) throws ExecutionException, InterruptedException {
+        RatedShape best = null;
+        for (Future<RatedShape> res : results) {
+            RatedShape cand = res.get();
 
-        private final ImageDNA dna;
+            if (best == null || cand.score < best.score)
+                best = cand;
+        }
 
-        public RatingTask(ImageDNA dna) {
-            this.dna = dna;
+        return best;
+    }
+
+    public static class RatingTask implements Callable<RatedShape> {
+
+        private final BufferedImage base;
+        private final Shape candidate;
+
+        RatingTask(BufferedImage base, Shape candidate) {
+            this.base = base;
+            this.candidate = candidate;
         }
 
         @Override
-        public RatedDNA call() throws Exception {
+        public RatedShape call() throws Exception {
             PainterThread thread = (PainterThread) Thread.currentThread();
-            thread.painter.paint(dna);
+            thread.painter.paint(base, candidate);
             long score = thread.rater.getScore(thread.painter.getImage());
 
-            return new RatedDNA(dna, score);
+            return new RatedShape(candidate, score);
         }
     }
-
 }

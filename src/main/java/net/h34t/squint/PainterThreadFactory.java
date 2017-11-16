@@ -13,7 +13,7 @@ class PainterThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(Runnable r) {
-        Painter painter = new Painter(bi.getWidth(), bi.getHeight());
+        IncrementalPainter painter = new IncrementalPainter(bi);
         Rater rater = new Rater(bi);
         return new PainterThread(painter, rater, r);
     }
