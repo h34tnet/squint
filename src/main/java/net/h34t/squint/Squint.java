@@ -1,13 +1,15 @@
 package net.h34t.squint;
 
-import net.h34t.squint.shape.Oval;
+import net.h34t.squint.shape.Ellipse;
 import net.h34t.squint.shape.Shape;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,10 +26,10 @@ import java.util.concurrent.Future;
 public class Squint {
 
     private static final int THREADS = 8;
-    private static final int SHAPES = 128;
-    private static final int OPT_CANDIDATE = 1024;
-    private static final int OPT_MUTATIONS = 32;
-    private static final int OPT_HC_CUTOFF = 32;
+    private static final int SHAPES = 32;
+    private static final int OPT_CANDIDATE = 512;
+    private static final int OPT_MUTATIONS = 16;
+    private static final int OPT_HC_CUTOFF = 8;
 
 
     public static void main(String... args) throws IOException, ExecutionException, InterruptedException {
@@ -43,7 +45,7 @@ public class Squint {
 
         String date = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss").format(new Date());
 
-        String filename = String.format("%s-%s-%d-%d-%d-%d.png",
+        String filename = String.format("%s-%s-%d-%d-%d-%d",
                 input.getName(),
                 date,
                 SHAPES,
@@ -51,8 +53,9 @@ public class Squint {
                 OPT_HC_CUTOFF,
                 OPT_MUTATIONS);
 
-        File output = new File(new File("output"), filename);
-        System.out.println("storing result to " + output.getName());
+        File outputPng = new File(new File("output"), filename + ".png");
+        File outputSvg = new File(new File("output"), filename + ".svg");
+        System.out.println("storing result to " + outputPng.getName());
 
         ExecutorService executorService = Executors.newFixedThreadPool(THREADS, new PainterThreadFactory(source));
 
@@ -89,7 +92,7 @@ public class Squint {
 
                 do {
                     for (int i = 0; i < OPT_CANDIDATE; i++) {
-                        Shape candidate = new Oval(
+                        Shape candidate = new Ellipse(
                                 r.nextInt(w),
                                 r.nextInt(h),
                                 r.nextInt((int) (w * percLeft) + 1) + 5,
@@ -162,7 +165,10 @@ public class Squint {
 
                 bestDna = new RatedDNA(bestDna.dna.append(bestCandidate.shape), bestCandidate.score);
 
-                saveLeader(painter, bestDna.dna, output);
+                System.out.println(bestCandidate.shape.toString());
+
+                saveLeader(painter, bestDna.dna, outputPng, outputSvg);
+
                 System.out.println();
             }
 
@@ -179,9 +185,19 @@ public class Squint {
         return new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255), r.nextInt(254) + 1);
     }
 
-    private static void saveLeader(Painter painter, ImageDNA dna, File output) throws IOException {
+    private static void saveLeader(Painter painter, ImageDNA dna, File outputPng, File outputSvg) throws IOException {
+
+        int w = painter.getImage().getWidth();
+        int h = painter.getImage().getHeight();
+
         painter.paint(dna);
-        ImageIO.write(painter.getImage(), "png", output);
+        ImageIO.write(painter.getImage(), "png", outputPng);
+
+        String svg = new SVGExport().export(dna.shapes, w, h);
+
+        try (OutputStream os = new FileOutputStream(outputSvg)) {
+            os.write(svg.getBytes("UTF-8"));
+        }
     }
 
     private static RatedShape getBestCandidate(List<Future<RatedShape>> results) throws ExecutionException, InterruptedException {

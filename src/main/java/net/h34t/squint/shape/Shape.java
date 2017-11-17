@@ -12,4 +12,6 @@ public interface Shape {
 
     List<Shape> mutateAll(Random r);
 
+    String toSVG(int w, int h);
+
 }
