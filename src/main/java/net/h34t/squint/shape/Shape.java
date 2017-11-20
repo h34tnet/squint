@@ -12,4 +12,8 @@ public interface Shape {
 
     List<Shape> mutateAll(Random r);
 
+    Shape mutateMin(Random r);
+
+    String exportSVG(int w, int h);
+
 }

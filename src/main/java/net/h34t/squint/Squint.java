@@ -1,12 +1,13 @@
 package net.h34t.squint;
 
-import net.h34t.squint.shape.Oval;
 import net.h34t.squint.shape.Shape;
+import net.h34t.squint.shape.Triangle;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -18,9 +19,10 @@ public class Squint {
 
     private static final int THREADS = 8;
     private static final int SHAPES = 128;
-    private static final int OPT_CANDIDATE = 4096;
+    private static final int OPT_CANDIDATE = 4096 * 2;
+
+    private static final int OPT_MUTATIONS = 128;
     private static final int OPT_HC_CUTOFF = 64;
-    private static final int OPT_MUTATIONS = 32;
 
 
     public static void main(String... args) throws IOException, ExecutionException, InterruptedException {
@@ -36,7 +38,7 @@ public class Squint {
         String date = SimpleDateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date())
                 .replaceAll("[^0-9]", "_");
 
-        String filename = String.format("%s-%s-%d-%d-%d-%d.png",
+        String filename = String.format("%s-%s-%d-%d-%d-%d",
                 input.getName(),
                 date,
                 SHAPES,
@@ -44,8 +46,9 @@ public class Squint {
                 OPT_HC_CUTOFF,
                 OPT_MUTATIONS);
 
-        File output = new File(new File("output"), filename);
-        System.out.println("storing result to " + output.getName());
+        File outputPng = new File(new File("output"), filename + ".png");
+        File outputSvg = new File(new File("output"), filename + ".svg");
+        System.out.println("storing result to " + outputPng.getName());
 
         ExecutorService executorService = Executors.newFixedThreadPool(THREADS, new PainterThreadFactory(source));
 
@@ -82,7 +85,9 @@ public class Squint {
 
                 do {
                     for (int i = 0; i < OPT_CANDIDATE; i++) {
-                        Shape candidate = new Oval(
+                        Shape candidate = new Triangle(r);
+
+                                /*new Oval(
                                 r.nextInt(w),
                                 r.nextInt(h),
                                 r.nextInt((int) (w * percLeft) + 1) + 5,
@@ -90,6 +95,7 @@ public class Squint {
 //                            r.nextInt(w - 1) + 1,
 //                            r.nextInt(h - 1) + 1,
                                 getRandomAlphaColor(r));
+                                */
 
                         if (!tested.contains(candidate)) {
                             candidates.add(new RatingTask(bestImage, candidate));
@@ -148,14 +154,52 @@ public class Squint {
                     }
                 }
 
-
                 long scoreImprovement = bestCandidateScore - bestCandidate.score;
+                System.out.printf("%,16d - improvement%n", scoreImprovement);
+                System.out.printf("%,16d - best candidate after %d opt rounds%n", bestCandidate.score, optRounds);
+
+                failedOptRounds = 0;
+                optRounds = 0;
+                bestCandidateScore = bestCandidate.score;
+
+                while (failedOptRounds < OPT_HC_CUTOFF) {
+                    try {
+                        optRounds += 1;
+                        candidates.clear();
+
+                        List<Shape> mutations = new ArrayList<>();
+
+                        for (int cs = 0; cs < OPT_MUTATIONS; cs++)
+                            mutations.add(bestCandidate.shape.mutateMin(r));
+
+                        for (Shape mutation : mutations)
+                            if (!tested.contains(mutation)) {
+                                candidates.add(new RatingTask(bestImage, mutation));
+                                tested.add(mutation);
+                            }
+
+                        RatedShape runnerUp = getBestCandidate(executorService.invokeAll(candidates));
+
+                        if (runnerUp != null && (runnerUp.score < bestCandidate.score)) {
+                            failedOptRounds = 0;
+                            bestCandidate = runnerUp;
+
+                        } else {
+                            failedOptRounds++;
+                        }
+
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+
+                scoreImprovement = bestCandidateScore - bestCandidate.score;
                 System.out.printf("%,16d - improvement%n", scoreImprovement);
                 System.out.printf("%,16d - best candidate after %d opt rounds%n", bestCandidate.score, optRounds);
 
                 bestDna = new RatedDNA(bestDna.dna.append(bestCandidate.shape), bestCandidate.score);
 
-                saveLeader(painter, bestDna.dna, output);
+                saveLeader(painter, bestDna.dna, outputPng);
+                exportSVG(bestDna.dna, w * 3, h * 3, outputSvg, bestDna.score);
                 System.out.println();
             }
 
@@ -164,17 +208,29 @@ public class Squint {
         }
     }
 
-    private static Color getRandomColor(Random r) {
-        return new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255));
-    }
-
-    private static Color getRandomAlphaColor(Random r) {
-        return new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255), r.nextInt(254) + 1);
-    }
-
     private static void saveLeader(Painter painter, ImageDNA dna, File output) throws IOException {
         painter.paint(dna);
         ImageIO.write(painter.getImage(), "png", output);
+    }
+
+    private static void exportSVG(ImageDNA dna, int w, int h, File output, long score) throws IOException {
+        try (FileWriter fw = new FileWriter(output)) {
+            fw.write(
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
+                            "<svg width=\"" + w + "\" height=\"" + h + "\" " +
+                            "\n" + // "viewBox=\"0 0 " + w + " " + h + "\"\n" +
+                            "    xmlns=\"http://www.w3.org/2000/svg\">\n" +
+//                            "    <defs><clipPath id="cutoff"><rect x=\"0\" y=\"0\" width=\"" + w + "\" height=\"" + h + "\" /></clipPath></defs>" +
+                            //                          "    <g clip-path=\"url(#cutoff)\">" +
+                            "    <rect x=\"0\" y=\"0\" width=\"" + w + "\" height=\"" + h + "\" fill=\"white\" />\n");
+
+            for (Shape s : dna.getShapes())
+                fw.write(s.exportSVG(w, h));
+
+            // fw.write("    </g>\n");
+            fw.write("</svg>\n");
+            fw.write("<!-- score: " + String.format(Locale.ENGLISH, "%,16d", score) + " -->\n");
+        }
     }
 
     private static RatedShape getBestCandidate(List<Future<RatedShape>> results) throws ExecutionException, InterruptedException {

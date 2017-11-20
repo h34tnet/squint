@@ -88,6 +88,16 @@ public class Oval implements Shape {
     }
 
     @Override
+    public Shape mutateMin(Random r) {
+        return null;
+    }
+
+    @Override
+    public String exportSVG(int w, int h) {
+        return null;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
