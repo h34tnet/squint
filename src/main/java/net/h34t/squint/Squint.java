@@ -3,7 +3,6 @@ package net.h34t.squint;
 import net.h34t.squint.shape.Shape;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
@@ -11,16 +10,16 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.*;
 
 public class Squint {
 
     private static final int THREADS = 8;
-    private static final int SHAPES = 64;
-    private static final int OPT_CANDIDATE = 1024;
+    private static final int SHAPES = 128;
+    private static final int OPT_CANDIDATE = 4096;
 
-    private static final int OPT_MUTATIONS = 8;
+    private static final int OPT_MUTATIONS = 64;
+
     private static final int OPT_HC_CUTOFF = 32;
 
 
@@ -28,7 +27,9 @@ public class Squint {
 
         Random r = new Random();
 
-        Shape.Generator generator = ShapeGenerator.from("ellipse");
+        String shape = "triangle";
+
+        Shape.Generator generator = ShapeGenerator.from(shape);
 
         File input = new File(args[0]);
 
@@ -39,7 +40,7 @@ public class Squint {
         String filename;
 
         if (args.length == 2) {
-            filename = args[1];
+            filename = args[1] + "-" + shape;
         } else {
             String date = SimpleDateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date())
                     .replaceAll("[^0-9]", "_");
@@ -58,36 +59,39 @@ public class Squint {
         File outputCsv = new File(new File("output"), filename + ".csv");
         System.out.println("storing result to " + outputPng.getName());
 
-        ExecutorService executorService = Executors.newFixedThreadPool(THREADS, new PainterThreadFactory(source));
+        ExecutorService executorService = null;
 
         long st = System.nanoTime();
         List<Timer> timers = new ArrayList<>(SHAPES);
 
         try {
+            executorService = Executors.newFixedThreadPool(THREADS, new PainterThreadFactory(source));
+
             Painter painter = new Painter(source.getWidth(), source.getHeight());
+            painter.paint(new ImageDNA());
             Rater rater = new Rater(source);
 
-            RatedDNA bestDna = new RatedDNA(new ImageDNA(Color.WHITE), rater.getScore(painter.getImage()));
+            RatedDNA bestDna = new RatedDNA(new ImageDNA(), rater.getScore(painter.getImage()));
 
-            BufferedImage bestImage;
+            BufferedImage base;
             List<RatingTask> candidates = new ArrayList<>();
 
             for (int j = 0; j < SHAPES; j++) {
                 double percDone = (double) j / SHAPES;
                 double percLeft = 1d - percDone;
 
-                System.out.printf("round %d - %.2f%% done%n", j, percDone * 100d);
+                System.out.printf("round %d - %.2f%% done, %.2f%% left%n", j, percDone * 100d, percLeft * 100d);
                 System.out.printf("%,16d - best candidate%n", bestDna.score);
 
                 painter.paint(bestDna.dna);
-                bestImage = painter.getImage();
+                base = painter.getImage();
 
                 RatedShape bestCandidate = null;
 
                 do {
                     candidates.clear();
                     for (int i = 0; i < OPT_CANDIDATE; i++)
-                        candidates.add(new RatingTask(bestImage, generator.generate(r)));
+                        candidates.add(new RatingTask(base, generator.generate(r)));
 
                     RatedShape runnerUp = getBestCandidate(executorService.invokeAll(candidates));
                     if (runnerUp.score < bestDna.score)
@@ -112,7 +116,7 @@ public class Squint {
                     candidates.clear();
 
                     while (candidates.size() < OPT_MUTATIONS)
-                        candidates.add(new RatingTask(bestImage, bestCandidate.shape.mutate(r, w, h)));
+                        candidates.add(new RatingTask(base, bestCandidate.shape.mutate(r, w, h)));
 
                     RatedShape runnerUp = getBestCandidate(executorService.invokeAll(candidates));
 

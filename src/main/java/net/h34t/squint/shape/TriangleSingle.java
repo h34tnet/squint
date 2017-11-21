@@ -5,11 +5,11 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Random;
 
-public class Triangle implements Shape {
+public class TriangleSingle implements Shape {
 
     private float[] dna;
 
-    public Triangle(Random r) {
+    public TriangleSingle(Random r) {
         dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
@@ -24,7 +24,7 @@ public class Triangle implements Shape {
         };
     }
 
-    public Triangle(float[] dna) {
+    public TriangleSingle(float[] dna) {
         this.dna = dna;
     }
 
@@ -56,32 +56,10 @@ public class Triangle implements Shape {
     public Shape mutate(Random r, int w, int h) {
         float[] mutDna = Arrays.copyOf(dna, dna.length);
 
-        int count = r.nextInt(mutDna.length - 1) + 1;
+        mutDna[r.nextInt(mutDna.length)] += r.nextFloat() - .5;
 
-        for (int i = 0; i < count; i++)
-            mutDna[r.nextInt(mutDna.length)] += r.nextFloat() - .5;
-
-        return new Triangle(mutDna);
+        return new TriangleSingle(mutDna);
     }
-
-//    @Override
-//    public List<Shape> mutateAll(Random r) {
-//        int dnaLen = dna.length;
-//        List<Shape> shapes = new ArrayList<>(dnaLen);
-//        for (int i = 0; i < dnaLen; i++) {
-//            float[] mutDna = Arrays.copyOf(dna, dnaLen);
-//            mutDna[i] = r.nextFloat();
-//            shapes.add(new Triangle(mutDna));
-//        }
-//        return shapes;
-//    }
-//
-//    @Override
-//    public Shape mutateMin(Random r) {
-//        float[] mutDna = Arrays.copyOf(dna, dna.length);
-//        mutDna[r.nextInt(mutDna.length)] += (r.nextFloat() - .5f) / 10d;
-//        return new Triangle(mutDna);
-//    }
 
     @Override
     public String exportSVG(int w, int h) {
@@ -102,7 +80,7 @@ public class Triangle implements Shape {
 
         @Override
         public Shape generate(Random r) {
-            return new Triangle(r);
+            return new TriangleSingle(r);
         }
     }
 }

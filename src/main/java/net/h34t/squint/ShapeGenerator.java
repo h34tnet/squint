@@ -1,9 +1,6 @@
 package net.h34t.squint;
 
-import net.h34t.squint.shape.Ellipse;
-import net.h34t.squint.shape.GaussTriangle;
-import net.h34t.squint.shape.Shape;
-import net.h34t.squint.shape.Triangle;
+import net.h34t.squint.shape.*;
 
 public class ShapeGenerator {
 
@@ -12,10 +9,14 @@ public class ShapeGenerator {
 
             case "triangle":
                 return new Triangle.Generator();
+            case "trianglesingle":
+                return new TriangleSingle.Generator();
             case "gausstriangle":
                 return new GaussTriangle.Generator();
             case "ellipse":
                 return new Ellipse.Generator();
+            case "trianglebw":
+                return new TriangleBW.Generator();
             default:
                 throw new IllegalArgumentException("Unknown generator " + shape);
         }
