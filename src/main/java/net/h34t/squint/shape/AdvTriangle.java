@@ -4,11 +4,11 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public class Triangle implements Shape {
+public class AdvTriangle implements Shape {
 
     private float[] dna;
 
-    public Triangle(Random r) {
+    public AdvTriangle(Random r) {
         dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
@@ -23,7 +23,7 @@ public class Triangle implements Shape {
         };
     }
 
-    public Triangle(float[] dna) {
+    public AdvTriangle(float[] dna) {
         this.dna = dna;
     }
 
@@ -56,12 +56,13 @@ public class Triangle implements Shape {
     public Shape mutate(Random r) {
         float[] mutDna = Arrays.copyOf(dna, dna.length);
 
+        // int count = (int) Math.min(dna.length, Math.abs(r.nextGaussian() * mutDna.length) + 1);
         int count = r.nextInt(mutDna.length - 1) + 1;
 
         for (int i = 0; i < count; i++)
             mutDna[r.nextInt(mutDna.length)] = r.nextFloat();
 
-        return new Triangle(mutDna);
+        return new AdvTriangle(mutDna);
     }
 
     @Override
@@ -71,7 +72,7 @@ public class Triangle implements Shape {
         for (int i = 0; i < dnaLen; i++) {
             float[] mutDna = Arrays.copyOf(dna, dnaLen);
             mutDna[i] = r.nextFloat();
-            shapes.add(new Triangle(mutDna));
+            shapes.add(new AdvTriangle(mutDna));
         }
         return shapes;
     }
@@ -79,8 +80,8 @@ public class Triangle implements Shape {
     @Override
     public Shape mutateMin(Random r) {
         float[] mutDna = Arrays.copyOf(dna, dna.length);
-        mutDna[r.nextInt(mutDna.length)] += (r.nextFloat() - .5f) / 10d;
-        return new Triangle(mutDna);
+        mutDna[r.nextInt(mutDna.length)] += r.nextGaussian() / 100d;
+        return new AdvTriangle(mutDna);
     }
 
     @Override

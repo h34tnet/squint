@@ -1,6 +1,7 @@
 package net.h34t.squint;
 
 import net.h34t.squint.shape.Shape;
+import net.h34t.squint.shape.AdvTriangle;
 import net.h34t.squint.shape.Triangle;
 
 import javax.imageio.ImageIO;
@@ -19,10 +20,10 @@ public class Squint {
 
     private static final int THREADS = 8;
     private static final int SHAPES = 128;
-    private static final int OPT_CANDIDATE = 4096 * 2;
+    private static final int OPT_CANDIDATE = 1024;
 
-    private static final int OPT_MUTATIONS = 128;
-    private static final int OPT_HC_CUTOFF = 64;
+    private static final int OPT_MUTATIONS = 64;
+    private static final int OPT_HC_CUTOFF = 32;
 
 
     public static void main(String... args) throws IOException, ExecutionException, InterruptedException {
@@ -48,9 +49,13 @@ public class Squint {
 
         File outputPng = new File(new File("output"), filename + ".png");
         File outputSvg = new File(new File("output"), filename + ".svg");
+        File outputCsv = new File(new File("output"), filename + ".csv");
         System.out.println("storing result to " + outputPng.getName());
 
         ExecutorService executorService = Executors.newFixedThreadPool(THREADS, new PainterThreadFactory(source));
+
+        long st = System.nanoTime();
+        List<Timer> timers = new ArrayList<>(SHAPES);
 
         try {
             Painter painter = new Painter(source.getWidth(), source.getHeight());
@@ -131,7 +136,7 @@ public class Squint {
                         List<Shape> mutations = new ArrayList<>();
                         mutations.addAll(bestCandidate.shape.mutateAll(r));
 
-                        for (int cs = 0; cs < OPT_MUTATIONS; cs++)
+                        while (mutations.size() < OPT_MUTATIONS)
                             mutations.add(bestCandidate.shape.mutate(r));
 
                         for (Shape mutation : mutations)
@@ -150,7 +155,8 @@ public class Squint {
                             failedOptRounds++;
                         }
 
-                    } catch (InterruptedException ignored) {
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
 
@@ -158,6 +164,7 @@ public class Squint {
                 System.out.printf("%,16d - improvement%n", scoreImprovement);
                 System.out.printf("%,16d - best candidate after %d opt rounds%n", bestCandidate.score, optRounds);
 
+                /*
                 failedOptRounds = 0;
                 optRounds = 0;
                 bestCandidateScore = bestCandidate.score;
@@ -188,18 +195,26 @@ public class Squint {
                             failedOptRounds++;
                         }
 
-                    } catch (InterruptedException ignored) {
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
 
                 scoreImprovement = bestCandidateScore - bestCandidate.score;
                 System.out.printf("%,16d - improvement%n", scoreImprovement);
                 System.out.printf("%,16d - best candidate after %d opt rounds%n", bestCandidate.score, optRounds);
+                */
 
                 bestDna = new RatedDNA(bestDna.dna.append(bestCandidate.shape), bestCandidate.score);
 
+                long et = System.nanoTime();
+                long dt = (et - st) / 1_000_000;
+
+                timers.add(new Timer(dt, bestDna.score));
+
                 saveLeader(painter, bestDna.dna, outputPng);
                 exportSVG(bestDna.dna, w * 3, h * 3, outputSvg, bestDna.score);
+                exportCSV(timers, outputCsv, THREADS, SHAPES, OPT_CANDIDATE, OPT_MUTATIONS, OPT_HC_CUTOFF);
                 System.out.println();
             }
 
@@ -233,6 +248,20 @@ public class Squint {
         }
     }
 
+    // THREADS, SHAPES, OPT_CANDIDATE, OPT_MUTATIONS, OPT_HC_CUTOFF
+    private static void exportCSV(List<Timer> timers, File output, int threads, int shapes, int candidates, int mutations, int cutoff) throws IOException {
+        try (FileWriter fw = new FileWriter(output)) {
+            fw.write(String.format(Locale.ENGLISH, "Shapes: %d%n" +
+                    "Threads:\t%d%n" +
+                    "Candidates:\t%d%n" +
+                    "Mutations:\t%d%n" +
+                    "Cutoff:\t%d%n", shapes, threads, candidates, mutations, cutoff));
+
+            for (Timer t : timers)
+                fw.write(t.time + "\t" + t.score + "\n");
+        }
+    }
+
     private static RatedShape getBestCandidate(List<Future<RatedShape>> results) throws ExecutionException, InterruptedException {
         RatedShape best = null;
         for (Future<RatedShape> res : results) {
@@ -262,6 +291,17 @@ public class Squint {
             long score = thread.rater.getScore(thread.painter.getImage());
 
             return new RatedShape(candidate, score);
+        }
+    }
+
+    private static class Timer {
+
+        final long time;
+        final long score;
+
+        public Timer(long time, long score) {
+            this.time = time;
+            this.score = score;
         }
     }
 }
