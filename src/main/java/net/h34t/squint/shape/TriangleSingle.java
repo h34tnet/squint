@@ -1,14 +1,15 @@
 package net.h34t.squint.shape;
 
 import java.awt.*;
-import java.util.*;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Random;
 
-public class AdvTriangle implements Shape {
+public class TriangleSingle implements Shape {
 
     private float[] dna;
 
-    public AdvTriangle(Random r) {
+    TriangleSingle(Random r) {
         dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
@@ -23,7 +24,7 @@ public class AdvTriangle implements Shape {
         };
     }
 
-    public AdvTriangle(float[] dna) {
+    private TriangleSingle(float[] dna) {
         this.dna = dna;
     }
 
@@ -36,7 +37,6 @@ public class AdvTriangle implements Shape {
                 Math.min(1f, Math.max(0f, dna[3])));
 
         canvas.setColor(c);
-        // canvas.setBackground(c);
 
         canvas.fillPolygon(
                 new int[]{
@@ -53,35 +53,12 @@ public class AdvTriangle implements Shape {
     }
 
     @Override
-    public Shape mutate(Random r) {
+    public Shape mutate(Random r, int w, int h) {
         float[] mutDna = Arrays.copyOf(dna, dna.length);
 
-        // int count = (int) Math.min(dna.length, Math.abs(r.nextGaussian() * mutDna.length) + 1);
-        int count = r.nextInt(mutDna.length - 1) + 1;
+        mutDna[r.nextInt(mutDna.length)] += r.nextFloat() - .5;
 
-        for (int i = 0; i < count; i++)
-            mutDna[r.nextInt(mutDna.length)] = r.nextFloat();
-
-        return new AdvTriangle(mutDna);
-    }
-
-    @Override
-    public List<Shape> mutateAll(Random r) {
-        int dnaLen = dna.length;
-        List<Shape> shapes = new ArrayList<>(dnaLen);
-        for (int i = 0; i < dnaLen; i++) {
-            float[] mutDna = Arrays.copyOf(dna, dnaLen);
-            mutDna[i] = r.nextFloat();
-            shapes.add(new AdvTriangle(mutDna));
-        }
-        return shapes;
-    }
-
-    @Override
-    public Shape mutateMin(Random r) {
-        float[] mutDna = Arrays.copyOf(dna, dna.length);
-        mutDna[r.nextInt(mutDna.length)] += r.nextGaussian() / 100d;
-        return new AdvTriangle(mutDna);
+        return new TriangleSingle(mutDna);
     }
 
     @Override
@@ -96,6 +73,14 @@ public class AdvTriangle implements Shape {
                 (int) Math.min(255, dna[1] * 255),
                 (int) Math.min(255, dna[2] * 255));
 
-        return "    <polygon points=\"" + pairs.toString() + "\"  fill=\"" + col + "\" fill-opacity=\"" + dna[3] + "\" />\n";
+        return "<polygon points=\"" + pairs.toString() + "\"  fill=\"" + col + "\" fill-opacity=\"" + dna[3] + "\" />\n";
+    }
+
+    public static class Generator implements Shape.Generator {
+
+        @Override
+        public Shape generate(Random r) {
+            return new TriangleSingle(r);
+        }
     }
 }

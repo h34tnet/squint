@@ -1,14 +1,15 @@
 package net.h34t.squint.shape;
 
 import java.awt.*;
-import java.util.*;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Random;
 
 public class GaussTriangle implements Shape {
 
     private float[] dna;
 
-    public GaussTriangle(Random r) {
+    GaussTriangle(Random r) {
         dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
@@ -19,11 +20,11 @@ public class GaussTriangle implements Shape {
                 (float) r.nextGaussian() + 0.5f,
                 (float) r.nextGaussian() + 0.5f,
                 (float) r.nextGaussian() + 0.5f,
-                (float) r.nextGaussian()
+                (float) r.nextGaussian() + 0.5f
         };
     }
 
-    public GaussTriangle(float[] dna) {
+    private GaussTriangle(float[] dna) {
         this.dna = dna;
     }
 
@@ -53,34 +54,15 @@ public class GaussTriangle implements Shape {
     }
 
     @Override
-    public Shape mutate(Random r) {
+    public Shape mutate(Random r, int w, int h) {
         float[] mutDna = Arrays.copyOf(dna, dna.length);
 
         // int count = (int) Math.min(dna.length, Math.abs(r.nextGaussian() * mutDna.length) + 1);
-        int count = r.nextInt(mutDna.length);
+        // int count = r.nextInt(mutDna.length);
 
-        for (int i = 0; i < count; i++)
-            mutDna[r.nextInt(mutDna.length)] = (float) r.nextGaussian();
+        // for (int i = 0; i < count; i++)
+        mutDna[r.nextInt(mutDna.length)] += (float) r.nextGaussian();
 
-        return new GaussTriangle(mutDna);
-    }
-
-    @Override
-    public List<Shape> mutateAll(Random r) {
-        int dnaLen = dna.length;
-        List<Shape> shapes = new ArrayList<>(dnaLen);
-        for (int i = 0; i < dnaLen; i++) {
-            float[] mutDna = Arrays.copyOf(dna, dnaLen);
-            mutDna[i] = r.nextFloat();
-            shapes.add(new GaussTriangle(mutDna));
-        }
-        return shapes;
-    }
-
-    @Override
-    public Shape mutateMin(Random r) {
-        float[] mutDna = Arrays.copyOf(dna, dna.length);
-        mutDna[r.nextInt(mutDna.length)] += r.nextGaussian() / 100d;
         return new GaussTriangle(mutDna);
     }
 
@@ -96,6 +78,14 @@ public class GaussTriangle implements Shape {
                 (int) Math.max(0, Math.min(255, dna[1] * 255)),
                 (int) Math.max(0, Math.min(255, dna[2] * 255)));
 
-        return "    <polygon points=\"" + pairs.toString() + "\"  fill=\"" + col + "\" fill-opacity=\"" + Math.max(0, Math.min(1, dna[3])) + "\" />\n";
+        return "<polygon points=\"" + pairs.toString() + "\"  fill=\"" + col + "\" fill-opacity=\"" + Math.max(0, Math.min(1, dna[3])) + "\" />\n";
+    }
+
+    public static class Generator implements Shape.Generator {
+
+        @Override
+        public Shape generate(Random r) {
+            return new GaussTriangle(r);
+        }
     }
 }

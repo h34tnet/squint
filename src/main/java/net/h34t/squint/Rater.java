@@ -3,15 +3,15 @@ package net.h34t.squint;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 
-public class Rater {
+class Rater {
 
     private final Raster rB;
 
-    public Rater(BufferedImage source) {
+    Rater(BufferedImage source) {
         rB = source.getRaster();
     }
 
-    public long getScore(BufferedImage a) {
+    long getScore(BufferedImage a) {
         Raster rA = a.getData();
 
         int[] colA = new int[4];
