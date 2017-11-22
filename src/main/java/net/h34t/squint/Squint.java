@@ -15,19 +15,19 @@ import java.util.concurrent.*;
 public class Squint {
 
     private static final int THREADS = 8;
-    private static final int SHAPES = 128;
-    private static final int OPT_CANDIDATE = 4096;
+    private static final int SHAPES = 2;
+    private static final int OPT_CANDIDATE = 1024;
 
-    private static final int OPT_MUTATIONS = 64;
+    private static final int OPT_MUTATIONS = 8;
 
-    private static final int OPT_HC_CUTOFF = 32;
+    private static final int OPT_HC_CUTOFF = 512;
 
 
     public static void main(String... args) throws IOException, ExecutionException, InterruptedException {
 
         Random r = new Random();
 
-        String shape = "poly4";
+        String shape = "triangle";
 
         Shape.Generator generator = ShapeGenerator.from(shape);
 
