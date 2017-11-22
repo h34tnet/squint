@@ -28,11 +28,11 @@ class Rater {
                 int c1 = colA[1] - colB[1];
                 int c2 = colA[2] - colB[2];
 
-                int cc0 = Math.abs(c0 * c0 * c0);
-                int cc1 = Math.abs(c1 * c1 * c2);
-                int cc2 = Math.abs(c2 * c2 * c2);
+                int cc0 = c0 * c0;
+                int cc1 = c1 * c1;
+                int cc2 = c2 * c2;
 
-                diff += cc0 + cc1 + cc2;
+                diff += Math.sqrt((cc0 + cc1 + cc2) / 3d);
             }
         }
 

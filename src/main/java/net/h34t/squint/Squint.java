@@ -16,7 +16,7 @@ public class Squint {
 
     private static final int THREADS = 8;
     private static final int SHAPES = 2;
-    private static final int OPT_CANDIDATE = 1024;
+    private static final int OPT_CANDIDATE = 128;
 
     private static final int OPT_MUTATIONS = 8;
 
