@@ -1,6 +1,6 @@
 package net.h34t.squint.shape;
 
-import java.awt.*;
+import java.awt.Graphics2D;
 import java.util.Random;
 
 public interface Shape {
@@ -9,13 +9,10 @@ public interface Shape {
 
     Shape mutate(Random r, int w, int h);
 
-//    List<Shape> mutateAll(Random r, int w, int h);
-//    Shape mutateMin(Random r, int w, int h);
-
     String exportSVG(int w, int h);
 
     interface Generator {
-        Shape generate(Random r);
+        Shape generate(Random r, int w, int h);
     }
 
 }

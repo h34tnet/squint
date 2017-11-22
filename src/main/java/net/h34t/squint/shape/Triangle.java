@@ -62,28 +62,11 @@ public class Triangle implements Shape {
 
         // for (int i = 0; i < count; i++)
         mutDna[r.nextInt(mutDna.length)] += r.nextFloat() * d - d / 2f;
+        // for (int i = 0; i < count; i++)
+//        mutDna[r.nextInt(mutDna.length)] += r.nextFloat() - .5f;
 
         return new Triangle(mutDna);
     }
-
-//    @Override
-//    public List<Shape> mutateAll(Random r) {
-//        int dnaLen = dna.length;
-//        List<Shape> shapes = new ArrayList<>(dnaLen);
-//        for (int i = 0; i < dnaLen; i++) {
-//            float[] mutDna = Arrays.copyOf(dna, dnaLen);
-//            mutDna[i] = r.nextFloat();
-//            shapes.add(new Triangle(mutDna));
-//        }
-//        return shapes;
-//    }
-//
-//    @Override
-//    public Shape mutateMin(Random r) {
-//        float[] mutDna = Arrays.copyOf(dna, dna.length);
-//        mutDna[r.nextInt(mutDna.length)] += (r.nextFloat() - .5f) / 10d;
-//        return new Triangle(mutDna);
-//    }
 
     @Override
     public String exportSVG(int w, int h) {
@@ -93,9 +76,9 @@ public class Triangle implements Shape {
         }
 
         String col = String.format(Locale.ENGLISH, "rgb(%d,%d,%d)",
-                (int) Math.min(255, dna[0] * 255),
-                (int) Math.min(255, dna[1] * 255),
-                (int) Math.min(255, dna[2] * 255));
+                (int) Math.max(0, Math.min(255, dna[0] * 255)),
+                (int) Math.max(0, Math.min(255, dna[1] * 255)),
+                (int) Math.max(0, Math.min(255, dna[2] * 255)));
 
         return "<polygon points=\"" + pairs.toString() + "\"  fill=\"" + col + "\" fill-opacity=\"" + dna[3] + "\" />\n";
     }
@@ -103,7 +86,7 @@ public class Triangle implements Shape {
     public static class Generator implements Shape.Generator {
 
         @Override
-        public Shape generate(Random r) {
+        public Shape generate(Random r, int w, int h) {
             return new Triangle(r);
         }
     }

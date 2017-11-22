@@ -5,7 +5,7 @@ import java.util.concurrent.ThreadFactory;
 
 class PainterThreadFactory implements ThreadFactory {
 
-    private BufferedImage bi;
+    private final BufferedImage bi;
 
     PainterThreadFactory(BufferedImage bi) {
         this.bi = bi;

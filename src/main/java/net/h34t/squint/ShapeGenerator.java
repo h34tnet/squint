@@ -19,6 +19,8 @@ class ShapeGenerator {
                 return new TriangleBW.Generator();
             case "poly4":
                 return new Poly4.Generator();
+            case "intpoly4":
+                return new IntPoly4.Generator();
             default:
                 throw new IllegalArgumentException("Unknown generator " + shape);
         }

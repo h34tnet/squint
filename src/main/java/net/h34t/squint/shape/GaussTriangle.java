@@ -84,7 +84,7 @@ public class GaussTriangle implements Shape {
     public static class Generator implements Shape.Generator {
 
         @Override
-        public Shape generate(Random r) {
+        public Shape generate(Random r, int w, int h) {
             return new GaussTriangle(r);
         }
     }

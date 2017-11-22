@@ -15,17 +15,17 @@ import java.util.concurrent.*;
 public class Squint {
 
     private static final int THREADS = 8;
-    private static final int SHAPES = 2;
-    private static final int OPT_CANDIDATE = 128;
+    private static final int SHAPES = 1;
+    private static final int OPT_CANDIDATE = 8;
 
-    private static final int OPT_MUTATIONS = 8;
+    private static final int OPT_MUTATIONS = 128;
 
     private static final int OPT_HC_CUTOFF = 512;
 
 
     public static void main(String... args) throws IOException, ExecutionException, InterruptedException {
 
-        Random r = new Random();
+        Random r = new Random(0);
 
         String shape = "triangle";
 
@@ -91,7 +91,7 @@ public class Squint {
                 do {
                     candidates.clear();
                     for (int i = 0; i < OPT_CANDIDATE; i++)
-                        candidates.add(new RatingTask(base, generator.generate(r)));
+                        candidates.add(new RatingTask(base, generator.generate(r, w, h)));
 
                     RatedShape runnerUp = getBestCandidate(executorService.invokeAll(candidates));
                     if (runnerUp.score < bestDna.score)
@@ -141,7 +141,7 @@ public class Squint {
                 timers.add(new Timer(dt, bestDna.score));
 
                 saveLeader(painter, bestDna.dna, outputPng);
-                exportSVG(bestDna.dna, w * 3, h * 3, outputSvg, bestDna.score);
+                exportSVG(bestDna.dna, w, h, outputSvg, bestDna.score);
                 exportCSV(timers, outputCsv, THREADS, SHAPES, OPT_CANDIDATE, OPT_MUTATIONS, OPT_HC_CUTOFF);
                 System.out.println();
             }
@@ -150,6 +150,8 @@ public class Squint {
             if (executorService != null)
                 executorService.shutdown();
         }
+
+        System.out.println("done.");
     }
 
     private static void saveLeader(Painter painter, ImageDNA dna, File output) throws IOException {

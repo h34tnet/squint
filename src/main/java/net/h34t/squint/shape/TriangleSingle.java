@@ -1,6 +1,7 @@
 package net.h34t.squint.shape;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Random;
@@ -79,7 +80,7 @@ public class TriangleSingle implements Shape {
     public static class Generator implements Shape.Generator {
 
         @Override
-        public Shape generate(Random r) {
+        public Shape generate(Random r, int w, int h) {
             return new TriangleSingle(r);
         }
     }

@@ -1,6 +1,7 @@
 package net.h34t.squint.shape;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Random;
@@ -10,7 +11,7 @@ public class Poly4 implements Shape {
     private float[] dna;
 
     Poly4(Random r) {
-        dna = new float[]{
+        this.dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
                 r.nextFloat(),
@@ -60,30 +61,30 @@ public class Poly4 implements Shape {
     public Shape mutate(Random r, int w, int h) {
         float[] mutDna = Arrays.copyOf(dna, dna.length);
 
-        mutDna[r.nextInt(mutDna.length)] += r.nextFloat() - .5;
+        mutDna[r.nextInt(mutDna.length)] += (r.nextFloat() - .5f) / 10f;
 
         return new Poly4(mutDna);
     }
 
     @Override
     public String exportSVG(int w, int h) {
-        StringBuilder pairs = new StringBuilder();
-        for (int i = 0; i < 4; i++) {
-            pairs.append(dna[i + 4] * w).append(",").append(dna[i + 8] * h).append(" ");
-        }
+        String pairs = (dna[4] * w + "," + dna[8] * h + " ") +
+                dna[5] * w + "," + dna[9] * h + " " +
+                dna[6] * w + "," + dna[10] * h + " " +
+                dna[7] * w + "," + dna[11] * h;
 
         String col = String.format(Locale.ENGLISH, "rgb(%d,%d,%d)",
-                (int) Math.min(255, dna[0] * 255),
-                (int) Math.min(255, dna[1] * 255),
-                (int) Math.min(255, dna[2] * 255));
+                (int) Math.max(0, Math.min(255, dna[0] * 255)),
+                (int) Math.max(0, Math.min(255, dna[1] * 255)),
+                (int) Math.max(0, Math.min(255, dna[2] * 255)));
 
-        return "<polygon points=\"" + pairs.toString() + "\"  fill=\"" + col + "\" fill-opacity=\"" + dna[3] + "\" />\n";
+        return "<polygon points=\"" + pairs + "\"  fill=\"" + col + "\" fill-opacity=\"" + dna[3] + "\" />\n";
     }
 
     public static class Generator implements Shape.Generator {
 
         @Override
-        public Shape generate(Random r) {
+        public Shape generate(Random r, int w, int h) {
             return new Poly4(r);
         }
     }
