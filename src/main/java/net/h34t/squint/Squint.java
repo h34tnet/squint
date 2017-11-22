@@ -9,25 +9,33 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Squint {
 
     private static final int THREADS = 8;
-    private static final int SHAPES = 128;
-    private static final int OPT_CANDIDATE = 4096;
+    private static final int SHAPES = 1;
+    private static final int OPT_CANDIDATE = 8;
 
-    private static final int OPT_MUTATIONS = 64;
+    private static final int OPT_MUTATIONS = 128;
 
-    private static final int OPT_HC_CUTOFF = 32;
+    private static final int OPT_HC_CUTOFF = 512;
 
 
     public static void main(String... args) throws IOException, ExecutionException, InterruptedException {
 
-        Random r = new Random();
+        Random r = new Random(0);
 
-        String shape = "poly4";
+        String shape = "triangle";
 
         Shape.Generator generator = ShapeGenerator.from(shape);
 
@@ -91,7 +99,7 @@ public class Squint {
                 do {
                     candidates.clear();
                     for (int i = 0; i < OPT_CANDIDATE; i++)
-                        candidates.add(new RatingTask(base, generator.generate(r)));
+                        candidates.add(new RatingTask(base, generator.generate(r, w, h)));
 
                     RatedShape runnerUp = getBestCandidate(executorService.invokeAll(candidates));
                     if (runnerUp.score < bestDna.score)
@@ -141,7 +149,7 @@ public class Squint {
                 timers.add(new Timer(dt, bestDna.score));
 
                 saveLeader(painter, bestDna.dna, outputPng);
-                exportSVG(bestDna.dna, w * 3, h * 3, outputSvg, bestDna.score);
+                exportSVG(bestDna.dna, w, h, outputSvg, bestDna.score);
                 exportCSV(timers, outputCsv, THREADS, SHAPES, OPT_CANDIDATE, OPT_MUTATIONS, OPT_HC_CUTOFF);
                 System.out.println();
             }
