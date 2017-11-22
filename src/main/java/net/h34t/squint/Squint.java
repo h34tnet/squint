@@ -37,7 +37,7 @@ public class Squint {
 
         Random r = new Random(0);
 
-        String shape = "triangle";
+        String shape = "intpoly4";
 
         Shape.Generator generator = ShapeGenerator.from(shape);
 
@@ -153,7 +153,7 @@ public class Squint {
                 saveLeader(painter, bestDna.dna, outputPng);
                 exportSVG(bestDna.dna, w, h, outputSvg, bestDna.score);
                 exportCSV(timers, outputCsv, THREADS, SHAPES, OPT_CANDIDATE, OPT_MUTATIONS, OPT_HC_CUTOFF);
-                ImageIO.write(source, "PNG", new File("output/source.png"));
+                // ImageIO.write(source, "PNG", new File("output/source.png"));
                 System.out.println();
             }
 
