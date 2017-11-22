@@ -27,7 +27,7 @@ public class Squint {
 
         Random r = new Random();
 
-        String shape = "triangle";
+        String shape = "gausstriangle";
 
         Shape.Generator generator = ShapeGenerator.from(shape);
 
@@ -147,7 +147,8 @@ public class Squint {
             }
 
         } finally {
-            executorService.shutdown();
+            if (executorService != null)
+                executorService.shutdown();
         }
     }
 
@@ -227,7 +228,7 @@ public class Squint {
         final long time;
         final long score;
 
-        public Timer(long time, long score) {
+        Timer(long time, long score) {
             this.time = time;
             this.score = score;
         }
