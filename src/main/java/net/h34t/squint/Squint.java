@@ -37,7 +37,7 @@ public class Squint {
 
         Random r = new Random(0);
 
-        String shape = "intpoly4";
+        String shape = "ellipse";
 
         Shape.Generator generator = ShapeGenerator.from(shape);
 
