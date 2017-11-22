@@ -5,14 +5,14 @@ import net.h34t.squint.shape.Shape;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class Painter {
+class Painter {
 
     private final int width;
     private final int height;
     private final Graphics2D g2d;
     private final BufferedImage image;
 
-    public Painter(int width, int height) {
+    Painter(int width, int height) {
         this.width = width;
         this.height = height;
 
@@ -21,7 +21,7 @@ public class Painter {
         // this.g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     }
 
-    public void paint(ImageDNA dna) {
+    void paint(ImageDNA dna) {
         // clear the canvas
         g2d.setBackground(Color.WHITE);
         g2d.clearRect(0, 0, width, height);
@@ -30,7 +30,7 @@ public class Painter {
             shape.draw(g2d, width, height);
     }
 
-    public BufferedImage getImage() {
+    BufferedImage getImage() {
         return image;
     }
 }

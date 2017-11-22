@@ -9,7 +9,7 @@ public class Poly4 implements Shape {
 
     private float[] dna;
 
-    public Poly4(Random r) {
+    Poly4(Random r) {
         dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
@@ -26,7 +26,7 @@ public class Poly4 implements Shape {
         };
     }
 
-    public Poly4(float[] dna) {
+    private Poly4(float[] dna) {
         this.dna = dna;
     }
 

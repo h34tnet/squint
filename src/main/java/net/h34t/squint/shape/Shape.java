@@ -1,7 +1,6 @@
 package net.h34t.squint.shape;
 
 import java.awt.*;
-import java.util.List;
 import java.util.Random;
 
 public interface Shape {

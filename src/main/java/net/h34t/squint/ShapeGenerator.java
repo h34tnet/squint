@@ -2,9 +2,9 @@ package net.h34t.squint;
 
 import net.h34t.squint.shape.*;
 
-public class ShapeGenerator {
+class ShapeGenerator {
 
-    public static Shape.Generator from(String shape) {
+    static Shape.Generator from(String shape) {
         switch (shape) {
 
             case "triangle":

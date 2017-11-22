@@ -9,7 +9,7 @@ public class TriangleBW implements Shape {
 
     private float[] dna;
 
-    public TriangleBW(Random r) {
+    TriangleBW(Random r) {
         dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
@@ -22,7 +22,7 @@ public class TriangleBW implements Shape {
         };
     }
 
-    public TriangleBW(float[] dna) {
+    private TriangleBW(float[] dna) {
         this.dna = dna;
     }
 

@@ -9,7 +9,7 @@ public class GaussTriangle implements Shape {
 
     private float[] dna;
 
-    public GaussTriangle(Random r) {
+    GaussTriangle(Random r) {
         dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
@@ -24,7 +24,7 @@ public class GaussTriangle implements Shape {
         };
     }
 
-    public GaussTriangle(float[] dna) {
+    private GaussTriangle(float[] dna) {
         this.dna = dna;
     }
 

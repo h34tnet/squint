@@ -9,7 +9,7 @@ public class TriangleSingle implements Shape {
 
     private float[] dna;
 
-    public TriangleSingle(Random r) {
+    TriangleSingle(Random r) {
         dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
@@ -24,7 +24,7 @@ public class TriangleSingle implements Shape {
         };
     }
 
-    public TriangleSingle(float[] dna) {
+    private TriangleSingle(float[] dna) {
         this.dna = dna;
     }
 

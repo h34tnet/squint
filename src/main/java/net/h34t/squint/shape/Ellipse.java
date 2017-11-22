@@ -9,7 +9,7 @@ public class Ellipse implements Shape {
 
     private final float[] dna;
 
-    public Ellipse(Random r) {
+    Ellipse(Random r) {
         this.dna = new float[]{
                 r.nextFloat(),
                 r.nextFloat(),
@@ -22,7 +22,7 @@ public class Ellipse implements Shape {
         };
     }
 
-    public Ellipse(float[] dna) {
+    private Ellipse(float[] dna) {
         this.dna = dna;
     }
 

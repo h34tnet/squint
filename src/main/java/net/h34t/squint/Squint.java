@@ -27,7 +27,7 @@ public class Squint {
 
         Random r = new Random();
 
-        String shape = "gausstriangle";
+        String shape = "poly4";
 
         Shape.Generator generator = ShapeGenerator.from(shape);
 
