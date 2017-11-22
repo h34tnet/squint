@@ -9,18 +9,28 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Squint {
 
     private static final int THREADS = 8;
-    private static final int SHAPES = 1;
-    private static final int OPT_CANDIDATE = 8;
 
-    private static final int OPT_MUTATIONS = 128;
+    private static final int SHAPES = 128;
 
-    private static final int OPT_HC_CUTOFF = 512;
+    private static final int OPT_CANDIDATE = 8 * 256;
+
+    private static final int OPT_MUTATIONS = 8 * 4;
+
+    private static final int OPT_HC_CUTOFF = 64;
 
 
     public static void main(String... args) throws IOException, ExecutionException, InterruptedException {
@@ -143,6 +153,7 @@ public class Squint {
                 saveLeader(painter, bestDna.dna, outputPng);
                 exportSVG(bestDna.dna, w, h, outputSvg, bestDna.score);
                 exportCSV(timers, outputCsv, THREADS, SHAPES, OPT_CANDIDATE, OPT_MUTATIONS, OPT_HC_CUTOFF);
+                ImageIO.write(source, "PNG", new File("output/source.png"));
                 System.out.println();
             }
 
@@ -151,7 +162,7 @@ public class Squint {
                 executorService.shutdown();
         }
 
-        System.out.println("done.");
+        System.out.println("done, result written to " + outputPng.getAbsolutePath());
     }
 
     private static void saveLeader(Painter painter, ImageDNA dna, File output) throws IOException {

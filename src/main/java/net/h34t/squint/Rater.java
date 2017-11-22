@@ -32,7 +32,10 @@ class Rater {
                 int cc1 = c1 * c1;
                 int cc2 = c2 * c2;
 
-                diff += Math.sqrt((cc0 + cc1 + cc2) / 3d);
+                // root mean square - doesn't work yet
+                // diff += Math.sqrt((double) (cc0 + cc1 + cc2) / 3d);
+
+                diff += cc0 + cc1 + cc2;
             }
         }
 

@@ -1,7 +1,6 @@
 package net.h34t.squint.shape;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Random;
@@ -65,7 +64,6 @@ public class IntPoly4 implements Shape {
 
         int rounds = r.nextInt(dna.length);
 
-
         for (int i = 0; i < rounds; i++) {
             int offs = r.nextInt(mutDna.length);
 
@@ -85,11 +83,11 @@ public class IntPoly4 implements Shape {
                 Math.max(0, Math.min(255, dna[1])),
                 Math.max(0, Math.min(255, dna[2])));
 
-        String pairs =
+        String pairs = "" +
                 dna[4] + "," + dna[8] + " " +
-                        dna[5] + "," + dna[9] + " " +
-                        dna[6] + "," + dna[10] + " " +
-                        dna[7] + "," + dna[11];
+                dna[5] + "," + dna[9] + " " +
+                dna[6] + "," + dna[10] + " " +
+                dna[7] + "," + dna[11];
 
         return "<polygon points=\"" + pairs + "\"  fill=\"" + col + "\" fill-opacity=\"" + (dna[3] / 256f) + "\" />\n";
     }

@@ -1,6 +1,7 @@
 package net.h34t.squint.shape;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Random;
@@ -56,14 +57,14 @@ public class Triangle implements Shape {
     public Shape mutate(Random r, int w, int h) {
         float[] mutDna = Arrays.copyOf(dna, dna.length);
 
-        // int count = r.nextInt(mutDna.length - 1) + 1;
+        int count = r.nextInt(mutDna.length - 1) + 1;
 
-        float d = Math.min(1f / w, 1f / h) * 2;
+        float d = Math.max(1f / w, 1f / h) * 2f;
 
-        // for (int i = 0; i < count; i++)
-        mutDna[r.nextInt(mutDna.length)] += r.nextFloat() * d - d / 2f;
-        // for (int i = 0; i < count; i++)
-//        mutDna[r.nextInt(mutDna.length)] += r.nextFloat() - .5f;
+        for (int i = 0; i < count; i++)
+            mutDna[r.nextInt(mutDna.length)] += r.nextFloat() * d - d / 2f;
+
+        // mutDna[r.nextInt(mutDna.length)] += r.nextFloat() - .5f;
 
         return new Triangle(mutDna);
     }
